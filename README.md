@@ -62,24 +62,6 @@ Arquivos:
 
 ---
 
-## 📂 Estrutura do Repositório
-
-```text
-.
-├── github-versionamento
-│   ├── exemplos
-│   ├── exercicios
-│   └── materiais
-│
-├── ia-agentes
-│   ├── exemplos
-│   ├── workflows-n8n
-│   ├── prompts
-│   └── materiais
-│
-└── README.md
-```
-
 ---
 
 ## 🏛 Organização
