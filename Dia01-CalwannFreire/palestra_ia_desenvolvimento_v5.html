@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Uso de IA no Processo de Desenvolvimento de Software</title>
+<style>
+    :root {
+      --bg: #070b18;
+      --bg2: #0c1328;
+      --panel: rgba(255,255,255,.075);
+      --panel2: rgba(255,255,255,.11);
+      --text: #edf3ff;
+      --muted: #a8b3cf;
+      --line: rgba(255,255,255,.14);
+      --cyan: #4ee6ff;
+      --blue: #6f8cff;
+      --purple: #b967ff;
+      --pink: #ff5fb7;
+      --green: #56f0a7;
+      --yellow: #ffd166;
+      --danger: #ff6b6b;
+      --radius: 24px;
+      --shadow: 0 24px 80px rgba(0,0,0,.38);
+      --sidebar: 300px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(78,230,255,.22), transparent 30%),
+        radial-gradient(circle at 90% 0%, rgba(185,103,255,.22), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(255,95,183,.12), transparent 35%),
+        linear-gradient(135deg, var(--bg), var(--bg2));
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, #000, transparent 78%);
+      z-index: -1;
+    }
+
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .menu-toggle {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1000;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(8, 12, 28, .88);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.4);
+      font-size: 19px;
+    }
+
+    aside {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: var(--sidebar);
+      padding: 76px 18px 24px;
+      background: rgba(7, 11, 24, .76);
+      backdrop-filter: blur(24px);
+      border-right: 1px solid var(--line);
+      z-index: 900;
+      transform: translateX(0);
+      transition: transform .28s ease;
+      overflow-y: auto;
+    }
+    body.sidebar-closed aside { transform: translateX(calc(-1 * var(--sidebar))); }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 22px;
+      padding: 12px;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    .bot {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      color: #07111f;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      box-shadow: 0 0 30px rgba(78,230,255,.35);
+    }
+    .brand small { display: block; color: var(--muted); font-size: 12px; line-height: 1.25; }
+    .brand strong { display:block; line-height:1.25; }
+
+    nav a {
+      display: block;
+      padding: 10px 12px;
+      margin: 4px 0;
+      color: var(--muted);
+      border-radius: 12px;
+      font-size: 14px;
+      border: 1px solid transparent;
+    }
+    nav a:hover {
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      border-color: var(--line);
+    }
+
+    main {
+      margin-left: var(--sidebar);
+      transition: margin-left .28s ease;
+      padding: 32px clamp(20px, 5vw, 70px) 90px;
+    }
+    body.sidebar-closed main { margin-left: 0; }
+
+    .hero {
+      min-height: 90vh;
+      display: grid;
+      align-items: center;
+      padding-top: 20px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 34px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 18px;
+      font-size: clamp(48px, 7vw, 92px);
+      line-height: .92;
+      letter-spacing: -4px;
+    }
+    .gradient {
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lead { font-size: clamp(20px, 2.2vw, 28px); color: #dbe6ff; max-width: 880px; }
+    .meta-row { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      padding: 9px 13px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .profile-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.06));
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transform: rotate(1.4deg);
+    }
+    .profile-card img { width: 100%; display: block; aspect-ratio: 4/5; object-fit: cover; }
+    .profile-caption { padding: 18px; }
+    .profile-caption strong { display:block; font-size: 22px; }
+    .profile-caption span { color: var(--muted); font-size: 15px; }
+
+    section {
+      scroll-margin-top: 28px;
+      margin: 80px 0;
+    }
+    .section-card {
+      background: rgba(255,255,255,.07);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(22px, 3vw, 38px);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .section-card::after {
+      content: "";
+      position: absolute;
+      width: 280px; height: 280px;
+      right: -140px; top: -140px;
+      background: radial-gradient(circle, rgba(78,230,255,.18), transparent 62%);
+      pointer-events: none;
+    }
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(34px, 4vw, 56px);
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    h3 { font-size: 26px; margin: 28px 0 12px; }
+    p { color: #d6def4; }
+    ul { color: #d6def4; }
+
+    .grid-2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:18px; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:18px; }
+    .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap:16px; }
+    .mini-card {
+      background: rgba(255,255,255,.075);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      transition: transform .2s ease, background .2s ease;
+    }
+    .mini-card:hover { transform: translateY(-4px); background: rgba(255,255,255,.11); }
+    .mini-card b { color: white; }
+    .mini-card small { color: var(--muted); display:block; margin-top:6px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+      margin: 20px 0;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--line);
+    }
+    th, td { padding: 14px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: white; background: rgba(255,255,255,.09); }
+    td { color: #d6def4; }
+    tr:last-child td { border-bottom: 0; }
+
+    .quote {
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      padding: 28px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, rgba(78,230,255,.15), rgba(185,103,255,.15));
+      border: 1px solid var(--line);
+    }
+
+    .r2d2 {
+      display: inline-grid;
+      place-items: center;
+      width: 34px; height: 34px;
+      border-radius: 11px 11px 8px 8px;
+      background: linear-gradient(180deg,#f5fbff 0 45%, #7ea4ff 46% 100%);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.4), 0 0 22px rgba(78,230,255,.35);
+      position: relative;
+      color: #0a1530;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .r2d2::before { content:""; position:absolute; top:7px; left:8px; width:7px; height:7px; background:#07142d; border-radius:50%; box-shadow: 13px 0 0 #4ee6ff; }
+
+    .jacare-stage {
+      margin-top: 22px;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 80% 40%, rgba(78,230,255,.2), transparent 24%),
+        linear-gradient(160deg, rgba(86,240,167,.12), rgba(111,140,255,.1));
+      overflow: hidden;
+      padding: 16px;
+    }
+    .jacare-stage svg { width: 100%; height: auto; display:block; }
+    .pulse { animation: pulse 1.9s ease-in-out infinite; }
+    .float { animation: float 3.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:.7; transform:scale(1); } 50% { opacity:1; transform:scale(1.04); } }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    .copy-block { position: relative; }
+    pre {
+      margin: 18px 0 0;
+      background: rgba(2, 6, 23, .78);
+      color: #d8e6ff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .copy-btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.1);
+      color: white;
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      font-weight: 700;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,.16); }
+    .section-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+
+    details {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+    summary { cursor:pointer; font-weight: 800; color: white; }
+
+    .footer { color: var(--muted); text-align:center; margin-top:70px; }
+
+    @media (max-width: 980px) {
+      aside { transform: translateX(calc(-1 * var(--sidebar))); }
+      body:not(.sidebar-closed) aside { transform: translateX(0); }
+      main, body.sidebar-closed main { margin-left:0; padding-left: 18px; padding-right: 18px; }
+      .hero-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .profile-card { transform:none; }
+      h1 { letter-spacing:-2px; }
+    }
+
+    .media-strip {
+      display: grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap: 22px;
+      margin: 26px 0 46px;
+    }
+    .video-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+      min-height: 320px;
+    }
+    .video-card video, .video-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+      object-fit: cover;
+      display: block;
+      opacity: .76;
+    }
+    .video-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(7,11,24,.12), rgba(7,11,24,.74));
+      pointer-events: none;
+    }
+    .video-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 18px;
+      z-index: 2;
+    }
+    .video-caption b {
+      display: block;
+      font-size: 26px;
+      line-height: 1.15;
+    }
+    .video-caption span {
+      color: var(--muted);
+      font-size: 16px;
+    }
+    .stacked-media {
+      display: grid;
+      gap: 22px;
+    }
+    .stacked-media .video-card { min-height: 148px; }
+    .stacked-media .video-card video, .stacked-media .video-card img { min-height: 148px; }
+    .section-visual {
+      display: grid;
+      grid-template-columns: 1fr .9fr;
+      gap: 26px;
+      align-items: stretch;
+      margin-top: 22px;
+    }
+    .section-visual .video-card { min-height: 360px; }
+    .section-visual .video-card video, .section-visual .video-card img { min-height: 360px; }
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .concept-box {
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.075);
+    }
+    .concept-box b { display:block; font-size:22px; margin-bottom:6px; }
+    .concept-box small { color: var(--muted); font-size: 15px; }
+    .md-example {
+      background: rgba(0,0,0,.35);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #d9f7ff;
+      font-size: 15px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 1100px) {
+      .media-strip, .section-visual, .concept-grid { grid-template-columns: 1fr; }
+    }
+
+  
+
+    .media-caption-note {
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 8px;
+    }
+    .jacare-stage {
+      position: relative;
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+    }
+    .jacare-stage img.jacare-photo {
+      width: min(920px, 100%);
+      max-height: 460px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 22px 48px rgba(0,0,0,.35));
+      border-radius: 24px;
+      background: rgba(255,255,255,.92);
+      padding: 16px;
+    }
+    .jacare-overlay {
+      position: absolute;
+      inset: 18px;
+      pointer-events: none;
+    }
+    .jacare-badge {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(7,11,24,.82);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 800;
+      box-shadow: 0 12px 35px rgba(0,0,0,.32);
+    }
+    .jacare-badge.one { left: 24px; top: 22px; }
+    .jacare-badge.two { right: 28px; top: 30px; }
+    .jacare-badge.three { left: 50%; transform: translateX(-50%); bottom: 22px; }
+    .media-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin: 24px 0;
+    }
+    .media-mini-grid .video-card { min-height: 220px; }
+    .media-mini-grid .video-card video, .media-mini-grid .video-card img { min-height: 220px; }
+
+    .plan-compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      margin: 24px 0;
+    }
+    .plan-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 430px;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+    }
+    .plan-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 430px;
+      object-fit: cover;
+      display: block;
+      filter: saturate(1.1) contrast(1.05) brightness(.72);
+    }
+    .plan-overlay {
+      position: absolute;
+      inset: auto 18px 18px 18px;
+      padding: 22px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      backdrop-filter: blur(6px);
+    }
+    .plan-overlay h3 { margin: 10px 0 10px; font-size: 28px; }
+    .plan-overlay ul { margin: 0; padding-left: 20px; }
+    .plan-label {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      color: #06101f;
+      font-weight: 900;
+      letter-spacing: .08em;
+      font-size: 13px;
+    }
+
+
+    .qr-card { display:flex; align-items:center; gap:18px; margin-top:22px; padding:18px; border-radius:24px; border:1px solid var(--line); background:rgba(255,255,255,.06); }
+    .qr-card img { width:170px; max-width:38vw; border-radius:18px; background:#fff; padding:8px; }
+    .qr-card b { display:block; font-size:22px; margin-bottom:6px; }
+    .qr-card small { color:var(--muted); font-size:16px; }
+</style>
+</head>
+<body>
+<button aria-label="Abrir ou fechar menu" class="menu-toggle" id="menuToggle">☰</button>
+<aside>
+<div class="brand">
+<div class="bot">AI</div>
+<div><strong>IA no Dev</strong><small>Guia visual da palestra</small></div>
+</div>
+<nav>
+<a href="#top">Capa</a>
+<a href="#sobre">Sobre o palestrante</a>
+<a href="#objetivo">1. Objetivo</a>
+<a href="#excel">2. IA é Excel 2.0</a>
+<a href="#conceitos">3. Conceitos rápidos</a>
+<a href="#apikey">4. API Key vs plano</a>
+<a href="#fazbem">5. O que faz bem/mal</a>
+<a href="#antesdepois">6. Antes e depois</a>
+<a href="#agents">7. Coding agents</a>
+<a href="#planbuild">8. Plan vs Build</a>
+<a href="#preparando">9. Projeto preparado</a>
+<a href="#prompt">10. Prompt e jacaré</a>
+<a href="#pratica">11. Prática</a>
+<a href="#fechamento">12. Fechamento</a>
+</nav>
+</aside>
+<main id="top">
+<header class="hero">
+<div class="hero-grid">
+<div>
+<h1>Uso de IA no <span class="gradient">Processo de Desenvolvimento</span></h1>
+<p class="lead">Como usar IA para acelerar entregas, melhorar produtividade e manter controle técnico no desenvolvimento de software.</p>
+<div class="meta-row">
+<span class="pill">🧑‍💻 Calwann de Souza Freire</span>
+<span class="pill">💼 Tech Lead &amp; Software Engineer</span>
+<span class="pill">🇬🇧 Centrii — London, UK</span>
+<span class="pill">30min palestra • 20min prática • 10min perguntas</span>
+</div>
+</div>
+<div class="video-card hero-video-card"><video autoplay="" loop="" muted="" playsinline="" src="assets/hero-ai-development.mp4"></video></div>
+</div>
+</header>
+<section id="sobre">
+<div class="section-card">
+<h2>Sobre o palestrante</h2>
+<div class="grid-2">
+<div>
+<p>Sou Tech Lead e Engenheiro de Software Full Stack com mais de 10 anos de experiência em SaaS, Dados e Inteligência Artificial.</p>
+<p>Atuo com tecnologias como Laravel, Next.js, ClickHouse e FastAPI, liderando equipes de desenvolvimento e iniciativas de automação assistida por IA.</p>
+<p>Atualmente desenvolvo soluções modernas utilizando LLMs e AI-assisted development para acelerar entregas, aumentar produtividade e transformar o processo de desenvolvimento de software.</p>
+<div class="qr-card">
+<img alt="QR Code do LinkedIn de Calwann Freire" src="assets/linkedin-qr-code.png"/>
+<div><b>LinkedIn</b><small>Aponte a câmera para acessar meu perfil.</small></div>
+</div>
+</div>
+<div class="profile-card" style="transform:none; max-width:420px; justify-self:center;">
+<img alt="Foto do palestrante Calwann de Souza Freire" src="assets/speaker-calwann-freire.jpeg"/>
+</div>
+</div>
+</div></section>
+<section id="objetivo"><div class="section-card">
+<h2>1. Objetivo</h2>
+<p class="lead">Ver como usar IA para acelerar o desenvolvimento sem perder controle técnico, tratando a ferramenta como apoio ao raciocínio, planejamento e execução.</p>
+<p>A palestra mostra como sair do uso genérico de chat e começar a usar IA como parte real do processo de desenvolvimento: entender o problema, planejar, construir, revisar e ajustar.</p>
+<div class="cards">
+<div class="mini-card"><b>Planejar tarefas</b><small>Antes de sair criando código.</small></div>
+<div class="mini-card"><b>Escrever e revisar código</b><small>Com validação humana.</small></div>
+<div class="mini-card"><b>Criar testes</b><small>Garantir comportamento esperado.</small></div>
+<div class="mini-card"><b>Documentar e refatorar</b><small>Melhorar manutenção.</small></div>
+<div class="mini-card"><b>Controlar escopo</b><small>Evitar soluções grandes para problemas pequenos.</small></div>
+<div class="mini-card"><b>Usar agentes</b><small>Plan primeiro, Build depois.</small></div>
+</div>
+</div></section>
+<section id="excel"><div class="section-card"><h2>2. IA é Excel 2.0</h2><div class="quote">“A IA não substitui quem sabe trabalhar. Ela aumenta a produtividade de quem sabe usar.”</div><table><thead><tr><th>Excel</th><th>IA</th></tr></thead><tbody><tr><td>Automatizou cálculos</td><td>Automatiza raciocínios e tarefas</td></tr><tr><td>Não substituiu analistas</td><td>Não substitui bons desenvolvedores</td></tr><tr><td>Exige conhecimento para uso avançado</td><td>Exige contexto, restrições e revisão</td></tr><tr><td>Pode gerar erro se mal usado</td><td>Pode gerar código errado se mal usado</td></tr></tbody></table><table><thead><tr><th>Quem usa IA sem critério</th><th>Quem usa IA bem</th></tr></thead><tbody><tr><td>Pede qualquer coisa e aceita a resposta</td><td>Define contexto, objetivo e restrições</td></tr><tr><td>Copia código sem entender</td><td>Revisa, testa e ajusta</td></tr><tr><td>Deixa a IA decidir arquitetura</td><td>Usa a IA como apoio técnico</td></tr><tr><td>Aumenta risco</td><td>Aumenta produtividade</td></tr></tbody></table>
+
+</div>
+</section>
+<section id="conceitos"><div class="section-card"><h2>3. Conceitos rápidos</h2><table><thead><tr><th>Conceito</th><th>Explicação</th></tr></thead><tbody><tr><td>IA</td><td>Sistema capaz de executar tarefas que normalmente exigiriam inteligência humana.</td></tr><tr><td>LLM</td><td>Modelo de linguagem capaz de entender e gerar texto, código e instruções.</td></tr><tr><td>Contexto</td><td>Informações que ajudam a IA a entender a tarefa.</td></tr><tr><td>Restrições</td><td>Limites que impedem a IA de resolver do jeito errado.</td></tr><tr><td>Token</td><td>Unidade de texto processada pelo modelo.</td></tr></tbody></table><div class="cards"><div class="mini-card"><b>IA no desenvolvimento</b><small>Requisitos, código legado, testes, bugs, documentação e automação.</small></div><div class="mini-card"><b>LLMs fortes para dev</b><small>Claude Opus 4.7 e ChatGPT 5.5 como referências para raciocínio e programação.</small></div><div class="mini-card"><b>Regra prática</b><small>Quanto melhor o contexto, melhor tende a ser a resposta.</small></div></div>
+</div>
+</section>
+<section id="apikey"><div class="section-card"><h2>4. API Key vs plano mensal</h2><table><thead><tr><th>Critério</th><th>API Key</th><th>Plano mensal</th></tr></thead><tbody><tr><td>Como funciona</td><td>Você cria uma chave e paga conforme o consumo.</td><td>Você paga um plano e usa dentro de uma cota.</td></tr><tr><td>Melhor para</td><td>Produtos, integrações e automações.</td><td>Uso individual, estudo e produtividade.</td></tr><tr><td>Controle técnico</td><td>Alto.</td><td>Menor.</td></tr><tr><td>Risco de custo</td><td>Pode crescer se não monitorar.</td><td>Mais previsível.</td></tr><tr><td>Atenção principal</td><td>Proteger a API Key e monitorar consumo.</td><td>Entender limites por plano, modelo e período.</td></tr></tbody></table><div class="quote" style="font-size:28px;">Nunca exponha API Key em frontend, GitHub público, prints de tela ou exemplos compartilhados.</div>
+
+</div>
+</section>
+<section id="fazbem"><div class="section-card"><h2>5. O que a IA faz bem, faz mal e os riscos</h2><table><thead><tr><th>A IA faz bem</th><th>A IA faz mal</th></tr></thead><tbody><tr><td>Explicar código</td><td>Entender regra de negócio incompleta</td></tr><tr><td>Criar primeira versão e boilerplate</td><td>Garantir que o código está correto</td></tr><tr><td>Criar testes simples</td><td>Tomar decisões de arquitetura sozinha</td></tr><tr><td>Ajudar no debug</td><td>Proteger dados sensíveis sem orientação</td></tr><tr><td>Comparar abordagens</td><td>Substituir revisão humana</td></tr></tbody></table><table><thead><tr><th>Tipo de risco</th><th>Exemplos</th></tr></thead><tbody><tr><td>Técnico</td><td>Código errado, dependência desnecessária, arquitetura ruim.</td></tr><tr><td>Segurança</td><td>Vazamento de API Key, dados sensíveis, código inseguro.</td></tr><tr><td>Processo</td><td>Falta de teste, mudança de escopo, falsa produtividade.</td></tr></tbody></table>
+
+</div>
+</section>
+<section id="antesdepois"><div class="section-card"><h2>6. Antes e depois da IA</h2><p class="lead">A IA não muda o que precisa ser feito. Ela muda a velocidade com que conseguimos chegar em uma primeira versão.</p><table><thead><tr><th>Antes da IA</th><th>Com IA</th></tr></thead><tbody><tr><td>Mais tempo pesquisando documentação</td><td>Mais tempo validando soluções</td></tr><tr><td>Mais boilerplate manual</td><td>Mais geração assistida</td></tr><tr><td>Debug mais solitário</td><td>Debug com hipóteses rápidas</td></tr><tr><td>Documentação manual</td><td>Primeira versão de documentação</td></tr><tr><td>Revisão individual</td><td>Revisão assistida</td></tr></tbody></table>
+
+</div>
+</section>
+<section id="agents"><div class="section-card"><h2>7. Coding agents</h2><p class="lead">Codex, Claude Code e OpenCode são ferramentas diferentes, mas cumprem a mesma função principal: trazer a IA para dentro do projeto.</p><table><thead><tr><th>O agente pode fazer</th><th>Exemplo</th></tr></thead><tbody><tr><td>Ler arquivos</td><td>Entender estrutura do projeto</td></tr><tr><td>Editar código</td><td>Alterar HTML, CSS, JS, backend ou testes</td></tr><tr><td>Criar arquivos</td><td>Criar componentes, services, testes ou páginas</td></tr><tr><td>Rodar comandos</td><td>Executar build, lint ou testes</td></tr><tr><td>Corrigir erros</td><td>Ler terminal e propor ajustes</td></tr><tr><td>Trabalhar por etapas</td><td>Planejar primeiro, executar depois</td></tr></tbody></table><table><thead><tr><th>Agente mal guiado</th><th>Agente bem guiado</th></tr></thead><tbody><tr><td>Altera arquivos demais</td><td>Atua dentro do escopo</td></tr><tr><td>Cria código complexo</td><td>Mantém simplicidade</td></tr><tr><td>Adiciona bibliotecas desnecessárias</td><td>Respeita restrições</td></tr><tr><td>Resolve o problema errado</td><td>Segue objetivo claro</td></tr></tbody></table>
+</div>
+</section>
+<section id="planbuild"><div class="section-card"><h2>8. Plan vs Build</h2><div class="quote" style="font-size:32px;">Plan = pensar antes de mexer.<br/>Build = mexer depois de aprovar.</div>
+<div class="plan-compare">
+<div class="plan-card plan-card-plan">
+<img alt="Imagem conceitual representando planejamento com IA" src="assets/plan-ai-brain.jpeg"/>
+<div class="plan-overlay">
+<span class="plan-label">PLAN</span>
+<h3>Pensar antes de mexer</h3>
+<ul>
+<li>Entender o problema</li>
+<li>Mapear riscos</li>
+<li>Identificar arquivos envolvidos</li>
+<li>Definir etapas</li>
+</ul>
+</div>
+</div>
+<div class="plan-card plan-card-build">
+<img alt="Robô programando representando execução do plano" src="assets/build-robot-coding.jpeg"/>
+<div class="plan-overlay">
+<span class="plan-label">BUILD</span>
+<h3>Executar depois de aprovar</h3>
+<ul>
+<li>Criar arquivos</li>
+<li>Alterar código</li>
+<li>Rodar comandos</li>
+<li>Explicar mudanças</li>
+</ul>
+</div>
+</div>
+</div>
+<table><thead><tr><th>Ordem</th><th>Ação</th></tr></thead><tbody><tr><td>1</td><td>Peça o PLAN</td></tr><tr><td>2</td><td>Leia e ajuste o plano</td></tr><tr><td>3</td><td>Aprove a direção</td></tr><tr><td>4</td><td>Peça o BUILD</td></tr><tr><td>5</td><td>Teste e peça ajustes pontuais</td></tr></tbody></table>
+
+</div></section>
+<section id="preparando"><div class="section-card">
+<h2>9. Preparando o projeto para IA: Markdown e Skills</h2>
+<p class="lead">Para usar IA em projetos reais, não basta abrir o agente e pedir código. O agente precisa entender o projeto, os padrões do time e os limites da tarefa.</p>
+<div class="section-visual">
+<div>
+<h3>Markdown como contexto do projeto</h3>
+<p>Arquivos <code>.md</code> funcionam como instruções permanentes para o agente. Eles evitam repetir o mesmo contexto em todo prompt.</p>
+<table><thead><tr><th>Arquivo</th><th>Função</th></tr></thead><tbody>
+<tr><td><code>README.md</code></td><td>Explica o projeto para humanos.</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td>Orienta o Claude Code.</td></tr>
+<tr><td><code>AGENTS.md</code></td><td>Orienta Codex, OpenCode e outros agentes.</td></tr>
+<tr><td>Documentações internas</td><td>Explicam arquitetura, domínio, decisões e padrões.</td></tr>
+</tbody></table>
+<div class="quote" style="font-size:24px;">README.md explica o projeto para pessoas.<br/>CLAUDE.md e AGENTS.md explicam o projeto para agentes de IA.</div>
+</div>
+<div class="video-card"><video autoplay="" loop="" muted="" playsinline="" src="assets/markdown-context-permanent.mp4"></video><div class="video-caption"><b>Contexto permanente</b><span>Quanto menos a IA precisa adivinhar, melhor ela trabalha.</span></div></div>
+</div>
+<h3>O que colocar nesses arquivos?</h3>
+<div class="concept-grid">
+<div class="concept-box"><b>Visão geral</b><small>O que o projeto faz e qual problema resolve.</small></div>
+<div class="concept-box"><b>Comandos</b><small>Como instalar, rodar, testar e fazer build.</small></div>
+<div class="concept-box"><b>Arquitetura</b><small>Como o projeto está organizado e quais padrões seguir.</small></div>
+<div class="concept-box"><b>Testes</b><small>Como validar e quando criar novos testes.</small></div>
+<div class="concept-box"><b>Do / Don't</b><small>O que o agente pode fazer e o que deve evitar.</small></div>
+<div class="concept-box"><b>Checklist</b><small>O que conferir antes de finalizar uma tarefa.</small></div>
+</div>
+<h3>Skills</h3>
+<p>Skills são instruções reutilizáveis para ensinar o agente a trabalhar melhor em uma tarefa, stack ou processo.</p>
+<table><thead><tr><th>Skill</th><th>Uso</th></tr></thead><tbody>
+<tr><td>Laravel</td><td>Controllers, Services, Requests, migrations e testes.</td></tr>
+<tr><td>Next.js</td><td>Componentes, rotas, hooks e padrões de frontend.</td></tr>
+<tr><td>Testes</td><td>Testes unitários, integração e cobertura.</td></tr>
+<tr><td>Segurança</td><td>Evitar vazamento de dados e más práticas.</td></tr>
+<tr><td>Refatoração</td><td>Melhorar código sem alterar comportamento.</td></tr>
+<tr><td>Documentação</td><td>Explicar decisões, fluxos e funcionalidades.</td></tr>
+</tbody></table>
+<p>O <code>skills.sh</code> funciona como um diretório de Skills prontas para agentes de IA. A ideia é reutilizar boas instruções em vez de escrever tudo manualmente em cada prompt.</p>
+<h3>Diferença prática</h3>
+<table><thead><tr><th>Recurso</th><th>Melhor uso</th></tr></thead><tbody>
+<tr><td><code>CLAUDE.md</code> / <code>AGENTS.md</code></td><td>Regras específicas do projeto.</td></tr>
+<tr><td>Skills</td><td>Regras reutilizáveis para uma stack ou tarefa.</td></tr>
+<tr><td>Prompt</td><td>Pedido específico da tarefa atual.</td></tr>
+</tbody></table>
+<h3>Regra prática</h3>
+<table><thead><tr><th>Para usar IA bem em projetos reais</th></tr></thead><tbody>
+<tr><td>O projeto precisa ter contexto.</td></tr>
+<tr><td>O agente precisa ter regras.</td></tr>
+<tr><td>A tarefa precisa ter escopo.</td></tr>
+<tr><td>O resultado precisa ser revisado.</td></tr>
+</tbody></table>
+<p class="lead">Sem isso, a IA vira apenas um gerador de código genérico. Com isso, ela vira uma ferramenta real de produtividade para o time.</p>
+</div></section>
+<section id="prompt"><div class="section-card"><h2>10. Como usar IA para programar</h2><p class="lead">Agora que o projeto está preparado, entra a parte mais importante: saber pedir.</p><table><thead><tr><th>Jeito fraco</th><th>Jeito melhor</th></tr></thead><tbody><tr><td>“Crie um sistema completo para mim”</td><td>“Este é o contexto, este é o objetivo, estas são as restrições”</td></tr><tr><td>Escopo aberto demais</td><td>Escopo claro</td></tr><tr><td>Código genérico</td><td>Código direcionado</td></tr><tr><td>Pouco controle</td><td>Plano antes da execução</td></tr></tbody></table>
+<h3>Dinâmica: o jacaré e a lagoa</h3>
+<p>Pergunta para a plateia: <strong>Como fazemos um jacaré chegar até a lagoa?</strong></p>
+<div aria-label="Imagem de jacaré na lagoa usada para dinâmica de prompt" class="jacare-stage">
+<img alt="Jacaré ao lado de uma lagoa" class="jacare-photo" src="assets/jacare-lagoa.png"/>
+</div>
+<table><thead><tr><th>Pergunta</th><th>Por que importa?</th></tr></thead><tbody><tr><td>O jacaré existe?</td><td>Valida o ponto de partida</td></tr><tr><td>Onde está o jacaré?</td><td>Define posição inicial</td></tr><tr><td>Onde está a lagoa?</td><td>Define destino</td></tr><tr><td>Existem obstáculos?</td><td>Define restrições</td></tr><tr><td>Como sabemos que ele chegou?</td><td>Define critério de conclusão</td></tr></tbody></table>
+<details><summary>Revelar prompt detalhado do jacaré</summary><div class="copy-block"><pre id="jacarePrompt">Quero que você resolva uma tarefa de forma extremamente detalhada e passo a passo.
+
+Tarefa:
+Fazer um jacaré chegar até uma lagoa.
+
+Antes de dar a resposta final, crie um checklist inicial validando as condições:
+
+1. O jacaré existe?
+2. O jacaré está vivo?
+3. O jacaré consegue se movimentar?
+4. O jacaré tem olhos?
+5. O jacaré consegue enxergar a lagoa?
+6. A lagoa existe?
+7. A lagoa está visível?
+8. Existe um caminho entre o jacaré e a lagoa?
+9. Existe algum obstáculo no caminho?
+10. O terreno permite que o jacaré ande?
+11. Qual é a distância aproximada entre o jacaré e a lagoa?
+12. Como saberemos que o jacaré chegou na lagoa?
+
+Depois do checklist, escreva mais de 10 passos para executar a tarefa.
+Os passos devem ser objetivos, sequenciais e fáceis de entender.
+
+Por fim, crie um desenho simples em ASCII mostrando:
+- O jacaré.
+- O caminho.
+- A lagoa.
+- A direção do movimento.</pre><button class="copy-btn" data-copy="jacarePrompt">Copiar prompt</button></div></details>
+<h3>Prompt fraco vs prompt melhor</h3><div class="grid-2"><div class="mini-card"><b>Prompt fraco</b><pre>Faz uma página de anime.</pre></div><div class="mini-card"><b>Prompt melhor</b><pre id="betterPrompt">Quero criar um projeto simples em HTML, CSS e JavaScript.
+
+O projeto será: Portfolio de Anime.
+
+O escopo é:
+- Criar apenas uma página inicial.
+- Mostrar 5 animes na página principal.
+- Ao clicar em um anime, mostrar os detalhes dele na própria página, usando JavaScript, HTML e CSS.
+- O código deve ser simples e fácil de entender para alunos iniciantes.
+
+Quero que você me ajude com:
+
+1. Organização de arquivos e pastas
+2. Tema visual
+3. Lista de animes com 30 animes populares
+4. Estrutura da página inicial
+5. Estrutura da página de detalhes do anime</pre><button class="copy-btn" data-copy="betterPrompt">Copiar prompt melhor</button></div></div>
+</div></section>
+<section id="pratica"><div class="section-card"><h2>11. Prática: Portfolio de Anime</h2><p class="lead">Na prática, vamos criar uma página simples usando IA em três etapas: planejar, construir e ajustar.</p><div class="cards"><div class="mini-card"><b>Escopo</b><small>Página inicial, 5 animes, cards, detalhes ao clicar.</small></div><div class="mini-card"><b>Stack</b><small>HTML, CSS e JavaScript puro.</small></div><div class="mini-card"><b>Objetivo didático</b><small>Código simples para alunos iniciantes.</small></div></div>
+
+</div>
+<h3>Prompt para PLAN</h3><pre id="planPrompt">Quero criar um projeto simples em HTML, CSS e JavaScript.
+
+O projeto será: Portfolio de Anime.
+
+O escopo é:
+- Criar apenas uma página inicial.
+- Mostrar 5 animes na página principal.
+- Ao clicar em um anime, mostrar os detalhes dele na própria página, usando JavaScript, HTML e CSS.
+- O código deve ser simples e fácil de entender para alunos iniciantes.
+
+Quero que você me ajude com:
+
+1. Organização de arquivos e pastas
+2. Tema visual
+3. Lista de animes com 30 animes populares
+4. Estrutura da página inicial
+5. Estrutura da página de detalhes do anime
+
+Importante:
+- Não crie código ainda.
+- Não crie arquivos ainda.
+- Apenas planeje comigo.</pre><button class="copy-btn" data-copy="planPrompt">Copiar PLAN</button><h3>Prompt para BUILD</h3><pre id="buildPrompt">Execute o planejado adicionando comentários para facilitar o entendimento com código simples para alunos.</pre><button class="copy-btn" data-copy="buildPrompt">Copiar BUILD</button><h3>Prompts de ajuste</h3><div class="cards"><div class="mini-card"><b>Visual</b><small>Melhore o visual da página para ficar mais moderno e impactante, mantendo HTML, CSS e JavaScript puro.</small></div><div class="mini-card"><b>Simplificar</b><small>Simplifique o código para que alunos iniciantes consigam entender.</small></div><div class="mini-card"><b>Comentários</b><small>Adicione comentários no HTML, CSS e JavaScript explicando as partes mais importantes.</small></div><div class="mini-card"><b>Interação</b><small>Melhore a interação ao clicar em um anime, adicionando uma transição suave na área de detalhes.</small></div></div></section>
+<section id="fechamento"><div class="section-card"><h2>12. Perguntas e fechamento</h2><div class="cards"><div class="mini-card"><b>A IA substitui programadores?</b><small>Boa pergunta para abrir discussão.</small></div><div class="mini-card"><b>Qual o risco de copiar código?</b><small>Código sem entendimento vira dívida técnica.</small></div><div class="mini-card"><b>Como saber se a IA errou?</b><small>Teste, revisão e conhecimento técnico.</small></div><div class="mini-card"><b>Como evitar vazamento de dados?</b><small>Não enviar segredos e dados sensíveis.</small></div></div><div class="quote" style="margin-top:22px;">A IA muda a velocidade do desenvolvimento, mas não elimina a necessidade de conhecimento técnico.</div><p class="lead">A IA não deve ser tratada como mágica. Ela deve ser tratada como ferramenta.</p><p class="lead"><strong>A IA é um Excel 2.0:</strong> quem sabe usar ganha produtividade; quem não sabe usar apenas gera respostas bonitas sem controle técnico.</p></div></section>
+<p class="footer">Uso de IA no Processo de Desenvolvimento de Software • Calwann de Souza Freire</p>
+</main>
+<script>
+    const body = document.body;
+    const btn = document.getElementById('menuToggle');
+    btn.addEventListener('click', () => {
+      body.classList.toggle('sidebar-closed');
+      btn.textContent = body.classList.contains('sidebar-closed') ? '☰' : '×';
+    });
+    document.querySelectorAll('[data-copy]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const el = document.getElementById(button.dataset.copy);
+        await navigator.clipboard.writeText(el.innerText);
+        const old = button.textContent;
+        button.textContent = 'Copiado';
+        setTimeout(() => button.textContent = old, 1200);
+      });
+    });
+  </script>
+</body>
+</html>

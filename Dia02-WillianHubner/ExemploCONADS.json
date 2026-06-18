@@ -1,0 +1,609 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -416,
+        -144
+      ],
+      "id": "f546ca85-fed0-41cc-a608-a2513aac9eec",
+      "name": "Telegram Trigger",
+      "webhookId": "8386991c-b207-40c5-b05c-6da479a492d5",
+      "credentials": {
+        "telegramApi": {
+          "id": "fZmFZeT3T97qinaF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# PERSONA\nVocê é o Assistente Virtual do IV CONADS. Sua função é processar mensagens de participantes e visitantes para encaminhamento à equipe organizadora.\n\n# REGRAS DE SAÍDA (ESTRITAMENTE OBRIGATÓRIAS)\n- Toda e qualquer resposta deve ser EXCLUSIVAMENTE um objeto JSON.\n- Não adicione saudações, introduções ou explicações fora do JSON.\n- Estrutura do JSON: {\"tipo\": \"pergunta | padrao\", \"mensagem\": \"texto aqui\"}\n\n# LÓGICA DE PROCESSAMENTO\n1. ANALISE a entrada do usuário.\n2. SE a entrada for uma dúvida ou pergunta sobre o evento, palestras ou minicursos:\n   - Defina o \"tipo\" como \"pergunta\".\n   - No campo \"mensagem\", \"Opa, sugestão ou pergunta enviada!!\"\n3. SE a entrada for um \"oi\", saudação, elogio, reclamação, sugestão, ofensa ou \"trolagem\":\n   - Defina o \"tipo\" como \"padrao\".\n   - No campo \"mensagem\", responda insira EXATAMENTE o texto abaixo:\n     \"Olá! Seja bem-vindo ao canal de atendimento do IV CONADS. Estou aqui para receber sua dúvida sobre a palestra e sobre os minicursos. Sugestões ou solicitações vou encaminhar para nossa equipe organizadora.\"\n\n# EXEMPLOS DE SAÍDA\nUsuário: \"Que horas começa a palestra de Python?\"\nResposta: {\"tipo\": \"pergunta\", \"mensagem\": \"Opa, sugestão ou pergunta enviada!!\"}\n\nUsuário: \"Oi, tudo bem?\"\nResposta: {\"tipo\": \"padrao\", \"mensagem\": \"Olá! Seja bem-vindo ao canal de atendimento do IV CONADS. Estou aqui para receber sua dúvida sobre a palestra e sobre os minicursos. Sugestões ou solicitações vou encaminhar para nossa equipe organizadora.\"}\n\n#PERGUNTA DO USUÁRIO\n{{ $json.message.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -224,
+        -144
+      ],
+      "id": "ddb75c95-edbb-486e-a672-5c0da6efc080",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        32
+      ],
+      "id": "c2a2cbe7-e9e8-4455-ad84-f80647888bed",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "phiwIFc7YHH6XcvL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -144,
+        32
+      ],
+      "id": "7c45c481-2e0d-4100-a574-d3e996b4c800",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -112
+      ],
+      "id": "41225c9e-d13c-4e62-8400-5b446decbed0",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8c4dca00-8188-4514-8b8a-15a8878c9cb5",
+              "leftValue": "={{ JSON.parse($json.output.replace(/```json\\n?|```/g, '').trim()).tipo }}",
+              "rightValue": "pergunta",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        112,
+        16
+      ],
+      "id": "3d65b191-0cfa-4ba2-8990-17dedd46a72a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{-5514549650}}",
+        "text": "=oioi",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        -96
+      ],
+      "id": "d98652fd-7f80-4943-b7ec-cbd96269410a",
+      "name": "Mensagem Grupo",
+      "webhookId": "19406ea9-8a65-4c0d-a468-82b58a6540f3",
+      "credentials": {
+        "telegramApi": {
+          "id": "fZmFZeT3T97qinaF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ JSON.parse($json.output.replace(/```json\\n?|```/g, '').trim()).mensagem }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        -160
+      ],
+      "id": "353bff07-4c86-4a48-ae15-74b118981ff7",
+      "name": "Mensagem resposta",
+      "webhookId": "19406ea9-8a65-4c0d-a468-82b58a6540f3",
+      "credentials": {
+        "telegramApi": {
+          "id": "fZmFZeT3T97qinaF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{-5514549650}}",
+        "text": "={{ $json['Carimbo de data/hora'] }}\n{{ $json['Semestre do Grupo'] }}\n{{ $json['Envie o relatório'] }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        -496
+      ],
+      "id": "1d9bba88-4541-45b8-9e49-200f06baaf19",
+      "name": "Mensagem resposta1",
+      "webhookId": "19406ea9-8a65-4c0d-a468-82b58a6540f3",
+      "credentials": {
+        "telegramApi": {
+          "id": "fZmFZeT3T97qinaF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1p-OihB03F5g3N4it9ieVjX9WoBb6p027Lk3bolbkyw0",
+          "mode": "list",
+          "cachedResultName": "Entrega Relatórios Extensionista (respostas)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1p-OihB03F5g3N4it9ieVjX9WoBb6p027Lk3bolbkyw0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1617622185,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1p-OihB03F5g3N4it9ieVjX9WoBb6p027Lk3bolbkyw0/edit#gid=1617622185"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -496
+      ],
+      "id": "9437014b-b77e-4ab9-9d7a-490c0460f35f",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "fY3JjyUZOun5kCeg",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Aplicação 01 - Quando alguém responde um forms do google.",
+        "height": 320,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "785f6f36-54f9-44f2-aebe-6c9166cb2cba",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -496
+      ],
+      "id": "ee4894b9-05da-46ec-a428-1918188e93b7",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "content": "## Aplicação 02 - Uma nova mensagem no Bot do Telegram, se for uma pergunta, envia no grupo da organização",
+        "height": 432,
+        "width": 1248,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "b70a497b-4b4f-4efa-ab73-43523d9099c1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Aplicação 03 - Uma pergunta de um CNPJ sendo consultada em uma API externa e respondida ao usuário",
+        "height": 448,
+        "width": 1104,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "8308af45-ea21-43e3-8b87-5b416c911932",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -416,
+        320
+      ],
+      "id": "37bce4a6-7079-4a3d-94c2-a078966f3d2a",
+      "name": "Telegram Trigger1",
+      "webhookId": "8386991c-b207-40c5-b05c-6da479a492d5",
+      "credentials": {
+        "telegramApi": {
+          "id": "fZmFZeT3T97qinaF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# PERSONA\nVocê é um Assistente Virtual que irá consultar o CNPJ enviado pelo usuário.\n\n# REGRAS DE SAÍDA (ESTRITAMENTE OBRIGATÓRIAS)\n- Apresente os dados da empresa enviando uma mensagem compatível com o Telegram.\n\n# LÓGICA DE PROCESSAMENTO\n1. ANALISE a entrada do usuário.\n2. Extraia o CNPJ da mensagem\n3. Se houver um CNPJ envie para o HTTPRequest.\n4. O CNPJ deve ir sem formatação, somente números.\n5. Se não houver um CNPJ, pergunte o CNPJ ao usuário.\n\n\nMensagem do Usuário:\n{{ $json.message.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -224,
+        320
+      ],
+      "id": "d0756aea-fa36-4bdb-9bdd-3f0013f2f767",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        496
+      ],
+      "id": "7037ce7d-7747-4bb9-871b-be0a2e4d6da2",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "phiwIFc7YHH6XcvL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        416,
+        320
+      ],
+      "id": "aa5edd34-0f61-4ccb-99d9-c56df18f8485",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger1').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        320
+      ],
+      "id": "dff438d5-6127-497a-90f8-273ae0b76853",
+      "name": "Mensagem resposta2",
+      "webhookId": "19406ea9-8a65-4c0d-a468-82b58a6540f3",
+      "credentials": {
+        "telegramApi": {
+          "id": "fZmFZeT3T97qinaF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use esta ferramenta sempre que o usuário informar um CNPJ ou pedir informações de uma empresa.\n\nParâmetros:\n- cnpj: CNPJ somente números.",
+        "url": "=https://brasilapi.com.br/api/cnpj/v1/{{$fromAI('cnpj')}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        16,
+        496
+      ],
+      "id": "315c14b6-56b3-495c-970d-241a09f9dceb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        512
+      ],
+      "id": "f2812fe3-494e-4e8a-a714-5e45cb9bfcb4",
+      "name": "Simple Memory1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mensagem resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Mensagem Grupo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Grupo": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem resposta": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mensagem resposta1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem resposta1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Mensagem resposta2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem resposta2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "84a85363-e6c7-4464-bcaf-fd93587a0e09",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "521ea3b2d8e155d5be746be8b607bdad811007ae97bee4b3144a32920e30b695"
+  },
+  "nodeGroups": [],
+  "id": "6a3tt47GOxzsQDtp",
+  "tags": []
+}
